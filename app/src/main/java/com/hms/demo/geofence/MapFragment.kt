@@ -67,7 +67,7 @@ class MapFragment : Fragment(), OnMapReadyCallback,HuaweiMap.OnMapLongClickListe
     override fun draw(points: ArrayList<LatLng>) {
         hMap?.apply {
             clear()
-            if (points.size >=3 /*GeofenceEditorActivity.LIMIT*/) {
+            if (points.size >=3 /*Minimum amount of points to draw a polygon*/) {
                 val polygonOptions = PolygonOptions()
                 polygonOptions.addAll(points)
                 val context=requireContext()
@@ -78,15 +78,10 @@ class MapFragment : Fragment(), OnMapReadyCallback,HuaweiMap.OnMapLongClickListe
                 addPolygon(polygonOptions)
             } else {
                 for (position in points) {
-                    val options = MarkerOptions()
-                    options.position(position)
-                    addMarker(options)
+                    drawMarker(position)
                 }
             }
-
         }
-
-
     }
 
     override fun onStart() {

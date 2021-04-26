@@ -13,14 +13,6 @@ import com.huawei.hms.maps.model.LatLng
 class GeofenceEditorActivity : AppCompatActivity(), MapFragment.OnMapFragmentInteractionListener{
     var drawableMap: DrawableMap? = null
     val points: ArrayList<LatLng> = ArrayList()
-    val LIMIT = 4
-    val GEOFENCE = "geofence"
-    //private var fab: FloatingActionButton? = null
-    //var gps: GPSTracker? = null
-    //private var editing = false
-    //private var position = 0
-    //var currentLocation: LatLng? = null
-    private var count = 0
     lateinit var binding:GeofenceEditorBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
