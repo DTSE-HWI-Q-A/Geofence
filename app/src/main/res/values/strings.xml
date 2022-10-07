@@ -2,4 +2,16 @@
     <string name="app_name">Geofence</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+    <string name="undo_error">There is nothing to undo</string>
+    <string name="redo_error">There is nothing to redo</string>
+    <string name="editor_label">Geofence Editor</string>
+    <string name="ok">OK</string>
+    <string name="alert">Alert</string>
+    <string name="no_points">You have no added points yet</string>
+    <string name="no_polygon">You must add at least 3 points</string>
+    <string name="confirmation">Confirmation</string>
+    <string name="name_your_geofence">Name your geofence</string>
+
 </resources>

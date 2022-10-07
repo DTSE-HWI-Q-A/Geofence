@@ -15,7 +15,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Geofence">
-        <activity android:name=".GeofenceEditorActivity">
+        <activity android:name=".GeofenceEditorActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:label="@string/editor_label">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

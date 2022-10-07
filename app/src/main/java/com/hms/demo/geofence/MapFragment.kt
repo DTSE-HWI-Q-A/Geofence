@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -20,17 +21,18 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 
-class MapFragment : Fragment(), OnMapReadyCallback, HuaweiMap.OnMapLongClickListener, DrawableMap, HuaweiMap.OnMarkerDragListener {
+class MapFragment : Fragment(), OnMapReadyCallback, HuaweiMap.OnMapLongClickListener, DrawableMap,
+    HuaweiMap.OnMarkerDragListener {
 
     var binding: MapBinding? = null
     var hMap: HuaweiMap? = null
     private var mapView: MapView? = null
     var mListener: OnMapFragmentInteractionListener? = null
     private val markers = ArrayList<Marker>()
-    private val removedMarkers:Queue<LatLng> = LinkedList()
+    private val removedMarkers: Stack<LatLng> = Stack()
     var currentPolygon: Polygon? = null
 
-    val viewmodel:MapViewModel by viewModels()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,11 +40,12 @@ class MapFragment : Fragment(), OnMapReadyCallback, HuaweiMap.OnMapLongClickList
 
 
     override fun onCreateView(
-            inflater: LayoutInflater, container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
 
         return MapBinding.inflate(inflater).also { binding = it }.root
+
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -72,7 +75,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, HuaweiMap.OnMapLongClickList
     }
 
     override fun drawLocationMarker(latLng: LatLng) {
-
+        //Draw a custom static marker
     }
 
     override fun drawPolygonMarker(latLng: LatLng) {
@@ -86,31 +89,25 @@ class MapFragment : Fragment(), OnMapReadyCallback, HuaweiMap.OnMapLongClickList
     }
 
     private fun drawPolygonWithMarkers() {
-        if (markers.size >=3) {
-            val points:ArrayList<LatLng> =ArrayList()
-            for(marker in markers){
+        if (markers.size >= 3) {
+            val points: ArrayList<LatLng> = ArrayList()
+            for (marker in markers) {
                 points.add(marker.position)
             }
             drawStaticPolygon(points)
-        }
-    }
-
-    private fun removePolygon() {
-        currentPolygon?.remove()
+        } else currentPolygon?.remove()
     }
 
     override fun drawEditablePolygon(points: ArrayList<LatLng>) {
-        for(point in points){
+        for (point in points) {
             drawPolygonMarker(point)
         }
     }
 
-    override fun enableLocation() {
-        hMap?.isMyLocationEnabled=true
-    }
 
-    override fun drawStaticPolygon(points: ArrayList<LatLng>){
-        if(points.size<3) return
+
+    override fun drawStaticPolygon(points: ArrayList<LatLng>) {
+        if (points.size < 3) return
         hMap?.apply {
             val polygonOptions = PolygonOptions()
             for (point in points) {
@@ -158,42 +155,62 @@ class MapFragment : Fragment(), OnMapReadyCallback, HuaweiMap.OnMapLongClickList
         mapView?.onLowMemory()
     }
 
+
+
+    override fun enableLocation() {
+        hMap?.isMyLocationEnabled = true
+    }
+
+    override fun onMarkerDragStart(marker: Marker?) {
+    }
+
+    override fun onMarkerDrag(marker: Marker?) {
+        marker?.let {
+            drawPolygonWithMarkers()
+        }
+    }
+
+    override fun onMarkerDragEnd(marker: Marker?) {
+        onMarkerDrag(marker)
+    }
+
     override fun onMapLongClick(latLng: LatLng?) {
-        latLng?.let { drawPolygonMarker(it) }
+        mListener?.onMapLongClick(latLng)
+        //If a user attempts to add a new marker, we should clear the redo stack
+        if (removedMarkers.isNotEmpty())removedMarkers.clear()
     }
 
-    override fun onMarkerDragStart(p0: Marker?) {
-    }
-
-    override fun onMarkerDrag(p0: Marker?) {
-        p0?.let {
-            drawPolygonWithMarkers()
-        }
-    }
-
-    override fun onMarkerDragEnd(p0: Marker?) {
-        p0?.let {
-            drawPolygonWithMarkers()
-        }
-    }
-
-    fun undo(){
-        markers.last().let {
-            markers.remove(it)
-            removedMarkers.add(it.position)
-            it.remove()
-            drawPolygonWithMarkers()
-        }
-
-        fun redo(){
-            if(removedMarkers.isNotEmpty()){
-                drawPolygonMarker(removedMarkers.remove())
+    override fun undo() {
+        if(markers.isNotEmpty()){
+            markers.last().let {
+                markers.remove(it)
+                removedMarkers.push(it.position)
+                it.remove()
+                drawPolygonWithMarkers()
             }
-        }
+        }else showShortToast(R.string.undo_error)
+    }
+
+    override fun redo() {
+        if (removedMarkers.isNotEmpty()) {
+            drawPolygonMarker(removedMarkers.pop())
+        } else showShortToast(R.string.redo_error)
+    }
+
+    override fun getPoints(): ArrayList<LatLng> {
+        val points=ArrayList<LatLng>()
+        for (marker in markers)
+            points.add(marker.position)
+        return points
+    }
+
+    private fun showShortToast(resourceMessage: Int) {
+        Toast.makeText(requireContext(),resourceMessage,Toast.LENGTH_SHORT).show()
     }
 
     interface OnMapFragmentInteractionListener {
         fun onDrawnPolygon(polygon: Polygon)
         fun onMapReady()
+        fun onMapLongClick(latLng: LatLng?)
     }
 }
